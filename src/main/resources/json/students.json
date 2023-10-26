@@ -36,7 +36,7 @@
   {"id":35,"surname":"Hall","age":19,"faculty":"Chemistry","group":"C-2"},
   {"id":36,"surname":"Clark","age":20,"faculty":"Mathematics","group":"M-3"},
   {"id":37,"surname":"Hernandez","age":18,"faculty":"Physics","group":"P-1"},
-  {"id":38,"surname":"Anderson","age":19,"faculty":"ComputerScience","group":"C-2"},
+  {"id":38,"surname":"Anderson","age":17,"faculty":"ComputerScience","group":"C-2"},
   {"id":39,"surname":"Lewis","age":20,"faculty":"Chemistry","group":"C-3"},
   {"id":40,"surname":"White","age":18,"faculty":"Mathematics","group":"M-1"},
   {"id":41,"surname":"Young","age":19,"faculty":"Physics","group":"P-2"},

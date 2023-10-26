@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -228,28 +229,11 @@ public class Main {
         System.out.println("=============Next task=========================");
     }
 
-    public static void task14() {
+    public static void task14(){
         List<Car> cars = Util.getCars();
         double transportationCostPerTon = 7.14;
-
-        Double totalCost = cars.stream()
-                .collect(Collectors.groupingBy(car -> {
-                    if (isJaguarOrWhite(car)) {
-                        return "Туркменистан";
-                    } else if (isLightCarFromCertainMakes(car)) {
-                        return "Узбекистан";
-                    } else if (isPuceHeavyCarFromCertainMakes(car)) {
-                        return "Казахстан";
-                    } else if (isOldCarWithCertainModels(car)) {
-                        return "Кыргызстан";
-                    } else if (isUncommonColorOrExpensive(car)) {
-                        return "Россия";
-                    } else if (has59InVin(car)) {
-                        return "Монголия";
-                    } else {
-                        return "";
-                    }
-                }))
+        double totalCost = cars.stream()
+                .collect(Collectors.groupingBy(Main::determineCountry))
                 .entrySet()
                 .stream()
                 .filter(entry -> !entry.getKey().isEmpty())
@@ -265,54 +249,55 @@ public class Main {
         System.out.printf("Oбщяя выручка логистической кампании %.2f$%n", totalCost);
         System.out.println("=============Next task=========================");
     }
-
-    private static boolean isJaguarOrWhite(Car car) {
-        return car.getCarMake().equalsIgnoreCase("Jaguar") || car.getColor().equalsIgnoreCase("White");
+    private static String determineCountry(Car car) {
+        return getCountryForJaguarOrWhite(car)
+                .orElseGet(() -> getCountryForLightCarFromCertainMakes(car)
+                        .orElseGet(() -> getCountryForPuceHeavyCarFromCertainMakes(car)
+                                .orElseGet(() -> getCountryForOldCarWithCertainModels(car)
+                                        .orElseGet(() -> getCountryForUncommonColorOrExpensive(car)
+                                                .orElseGet(() -> getCountryForVinContains59(car)
+                                                        .orElse(""))))));
+    }
+    private static Optional<String> getCountryForJaguarOrWhite(Car car) {
+        Predicate<Car> predicate = c -> c.getCarMake().equalsIgnoreCase("Jaguar") || c.getColor().equalsIgnoreCase("White");
+        return predicate.test(car) ? Optional.of("Туркменистан") : Optional.empty();
     }
 
-    private static boolean isLightCarFromCertainMakes(Car car) {
-        Predicate<Car> lightCarPredicate = c ->
-                c.getMass() <= 1500 &&
-                        (c.getCarMake().equalsIgnoreCase("BMW") ||
-                                c.getCarMake().equalsIgnoreCase("Lexus") ||
-                                c.getCarMake().equalsIgnoreCase("Chrysler") ||
-                                c.getCarMake().equalsIgnoreCase("Toyota"));
-
-        return lightCarPredicate.test(car);
+    private static Optional<String> getCountryForLightCarFromCertainMakes(Car car) {
+        Predicate<Car> predicate = c -> c.getMass() <= 1500 &&
+                (c.getCarMake().equalsIgnoreCase("BMW") ||
+                        c.getCarMake().equalsIgnoreCase("Lexus") ||
+                        c.getCarMake().equalsIgnoreCase("Chrysler") ||
+                        c.getCarMake().equalsIgnoreCase("Toyota"));
+        return predicate.test(car) ? Optional.of("Узбекистан") : Optional.empty();
     }
 
-    private static boolean isPuceHeavyCarFromCertainMakes(Car car) {
-        Predicate<Car> puceHeavyCarPredicate = c ->
-                c.getColor().equalsIgnoreCase("Puce") &&
-                        c.getMass() > 4000 &&
-                        (c.getCarMake().equalsIgnoreCase("GMC") ||
-                                c.getCarMake().equalsIgnoreCase("Dodge"));
-
-        return puceHeavyCarPredicate.test(car);
+    private static Optional<String> getCountryForPuceHeavyCarFromCertainMakes(Car car) {
+        Predicate<Car> predicate = c -> c.getColor().equalsIgnoreCase("Puce") &&
+                c.getMass() > 4000 &&
+                (c.getCarMake().equalsIgnoreCase("GMC") ||
+                        c.getCarMake().equalsIgnoreCase("Dodge"));
+        return predicate.test(car) ? Optional.of("Казахстан") : Optional.empty();
     }
 
-    private static boolean isOldCarWithCertainModels(Car car) {
-        Predicate<Car> oldCarWithCertainModelsPredicate = c ->
-                c.getReleaseYear() <= 1982 ||
-                        (c.getCarModel().equalsIgnoreCase("Civic") ||
-                                c.getCarModel().equalsIgnoreCase("Cherokee"));
-
-        return oldCarWithCertainModelsPredicate.test(car);
+    private static Optional<String> getCountryForOldCarWithCertainModels(Car car) {
+        Predicate<Car> predicate = c -> c.getReleaseYear() <= 1982 ||
+                (c.getCarModel().equalsIgnoreCase("Civic") ||
+                        c.getCarModel().equalsIgnoreCase("Cherokee"));
+        return predicate.test(car) ? Optional.of("Кыргызстан") : Optional.empty();
+    }
+    private static Optional<String> getCountryForUncommonColorOrExpensive(Car car) {
+        Predicate<Car> predicate = c -> (!c.getColor().equalsIgnoreCase("Yellow") &&
+                !c.getColor().equalsIgnoreCase("Red") &&
+                !c.getColor().equalsIgnoreCase("Green") &&
+                !c.getColor().equalsIgnoreCase("Blue")) ||
+                c.getPrice() > 40000;
+        return predicate.test(car) ? Optional.of("Россия") : Optional.empty();
     }
 
-    private static boolean isUncommonColorOrExpensive(Car car) {
-        Predicate<Car> uncommonColorOrExpensivePredicate = c ->
-                (!c.getColor().equalsIgnoreCase("Yellow") &&
-                        !c.getColor().equalsIgnoreCase("Red") &&
-                        !c.getColor().equalsIgnoreCase("Green") &&
-                        !c.getColor().equalsIgnoreCase("Blue")) ||
-                        c.getPrice() > 40000;
-
-        return uncommonColorOrExpensivePredicate.test(car);
-    }
-
-    private static boolean has59InVin(Car car) {
-        return car.getVin().contains("59");
+    private static Optional<String> getCountryForVinContains59(Car car) {
+        Predicate<Car> predicate = c -> c.getVin().contains("59");
+        return predicate.test(car) ? Optional.of("Монголия") : Optional.empty();
     }
 
 
