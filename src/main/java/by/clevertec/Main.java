@@ -11,7 +11,6 @@ import by.clevertec.util.Util;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -196,40 +195,30 @@ public class Main {
 
     public static void task13() {
         List<House> houses = Util.getHouses();
-        List<Person> secondLine = new ArrayList<>();
+
         int maxChildrenAge = 18;
         int minOldAge = 65;
-        houses.stream()
-                .sorted((h1, h2) -> {
-                    if (h1.getBuildingType().equalsIgnoreCase("Hospital")) {
-                        return -1;
-                    } else if (h2.getBuildingType().equalsIgnoreCase("Hospital")) {
+
+        List<Person> firstPriorityEvacuation = houses.stream()
+                .sorted(Comparator.comparing(house -> {
+                    if (house.getBuildingType().equalsIgnoreCase("Hospital")) {
+                        return 0;
+                    } else if (ageСomparison(house.getPersonList().get(0), maxChildrenAge, minOldAge)) {
                         return 1;
                     } else {
-                        return 0;
+                        return 2;
                     }
-                })
-                .mapMulti((house, consumer) -> {
-                    if (house.getBuildingType().equalsIgnoreCase("Hospital")) {
-                        for (Person person : house.getPersonList()) {
-                            consumer.accept(person);
-                        }
-                    } else {
-                        for (Person person : house.getPersonList()) {
-                            if (extracted(person, maxChildrenAge, minOldAge)) {
-                                consumer.accept(person);
-                            } else {
-                                secondLine.add(person);
-                            }
-                        }
-                    }
-                })
+                }))
+                .flatMap(house -> house.getPersonList().stream())
                 .limit(500)
-                .forEach(System.out::println);
+                .collect(Collectors.collectingAndThen(Collectors.toList(), evacuatedPersons -> {
+                    evacuatedPersons.forEach(System.out::println);
+                    return evacuatedPersons;
+                }));
         System.out.println("=============Next task=========================");
     }
 
-    public static void task14(){
+    public static void task14() {
         List<Car> cars = Util.getCars();
         double transportationCostPerTon = 7.14;
         double totalCost = cars.stream()
@@ -249,6 +238,7 @@ public class Main {
         System.out.printf("Oбщяя выручка логистической кампании %.2f$%n", totalCost);
         System.out.println("=============Next task=========================");
     }
+
     private static String determineCountry(Car car) {
         return getCountryForJaguarOrWhite(car)
                 .orElseGet(() -> getCountryForLightCarFromCertainMakes(car)
@@ -258,6 +248,7 @@ public class Main {
                                                 .orElseGet(() -> getCountryForVinContains59(car)
                                                         .orElse(""))))));
     }
+
     private static Optional<String> getCountryForJaguarOrWhite(Car car) {
         Predicate<Car> predicate = c -> c.getCarMake().equalsIgnoreCase("Jaguar") || c.getColor().equalsIgnoreCase("White");
         return predicate.test(car) ? Optional.of("Туркменистан") : Optional.empty();
@@ -286,6 +277,7 @@ public class Main {
                         c.getCarModel().equalsIgnoreCase("Cherokee"));
         return predicate.test(car) ? Optional.of("Кыргызстан") : Optional.empty();
     }
+
     private static Optional<String> getCountryForUncommonColorOrExpensive(Car car) {
         Predicate<Car> predicate = c -> (!c.getColor().equalsIgnoreCase("Yellow") &&
                 !c.getColor().equalsIgnoreCase("Red") &&
@@ -417,7 +409,7 @@ public class Main {
 
     }
 
-    private static boolean extracted(Person person, int maxChildrenAge, int minOldAge) {
+    private static boolean ageСomparison(Person person, int maxChildrenAge, int minOldAge) {
         LocalDate dateOfBirth = LocalDate.parse((person.getDateOfBirth()).toString());
         LocalDate currentDate = LocalDate.now();
         int age = Period.between(dateOfBirth, currentDate).getYears();
